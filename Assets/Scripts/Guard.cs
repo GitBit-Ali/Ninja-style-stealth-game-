@@ -8,53 +8,66 @@ public class Guard : MonoBehaviour
     [SerializeField] private float waitTime = .3f;
     [SerializeField] private float turnSpeed = 90f;
 
+    private int _index = -1;
+    private Vector2[] waypoints;
+
     private void Start ()
     {
-        Vector3[] waypoints = new Vector3[pathHolder.childCount];
+        waypoints = new Vector2[pathHolder.childCount];
 
         for (int i = 0; i < waypoints.Length; i++)
         {
             waypoints[i] = pathHolder.GetChild(i).position;
         }
 
-        StartCoroutine(FollowPath(waypoints));
+        StartCoroutine(FollowPath());
     }
 
-    private IEnumerator FollowPath (Vector3[] wayPoints)
+    private IEnumerator FollowPath ()
     {
-        transform.position = wayPoints[0];
-        transform.eulerAngles = new Vector3(0f, 0f, -90f);
+        _index = CalculateNextWaypointIndex(_index);
+        yield return GoToPoint(waypoints[_index]);
 
-        int targetWaypointIndex = 1;
-        Vector3 targetPosition = wayPoints[targetWaypointIndex];
+        yield return new WaitForSeconds(waitTime);
 
-        while (true)
+        int nextIndex = _index;
+        nextIndex = CalculateNextWaypointIndex(nextIndex);
+        yield return TurnToFace(waypoints[nextIndex]);
+
+        StartCoroutine(FollowPath());
+    }
+
+    private IEnumerator GoToPoint (Vector2 wayPoint)
+    {
+        while (Vector2.Distance(transform.position, wayPoint) > .1f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
-            
-            if (Vector3.Distance(transform.position, targetPosition) < .1f)
-            {
-                targetWaypointIndex = (targetWaypointIndex + 1) % wayPoints.Length;
-                targetPosition = wayPoints[targetWaypointIndex];
-                yield return new WaitForSeconds(waitTime);
-                yield return StartCoroutine(TurnToFace(targetPosition));
-            }
-
+            Vector2 dir = (wayPoint - (Vector2)transform.position).normalized;
+            transform.position += speed * Time.deltaTime * (Vector3)dir;
             yield return null;
         }
     }
 
+    
     private IEnumerator TurnToFace (Vector2 lookTarget)
     {
-        Vector2 dirToLookTarget = (lookTarget - (Vector2)transform.position).normalized;
-        float targetAngle = Mathf.Atan2(dirToLookTarget.y, dirToLookTarget.x) * Mathf.Rad2Deg;
+        Vector2 directionToLookTarget = (lookTarget - (Vector2)transform.position).normalized;
+        float angle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;
+        float currentAngle = transform.eulerAngles.z;
+        float angleReachPercent = 0f;
 
-        while (Mathf.Abs(Mathf.DeltaAngle(transform.eulerAngles.z, targetAngle)) > 0.05f)
+        while (Mathf.Abs(currentAngle - angle) > 0.05f)
         {
-            float angle = Mathf.MoveTowardsAngle(transform.eulerAngles.z, targetAngle, turnSpeed * Time.deltaTime);
-            transform.eulerAngles = Vector3.forward * angle;
+            angleReachPercent += Time.deltaTime;
+            currentAngle = Mathf.Lerp(currentAngle, angle, angleReachPercent);
+            transform.eulerAngles = new(0f, 0f, currentAngle);
             yield return null;
         }
+    }
+    
+
+    private int CalculateNextWaypointIndex (int current)
+    {
+        return (current + 1) % waypoints.Length;
     }
 
     private void OnDrawGizmos ()
