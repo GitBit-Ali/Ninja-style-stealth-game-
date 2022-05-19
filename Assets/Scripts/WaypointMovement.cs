@@ -37,7 +37,7 @@ public class WaypointMovement : MonoBehaviour
 
         int i = _index;
         i = CalculateNextWaypointIndex(i);
-        TurnToFace(_waypoints[i]);
+        StartCoroutine(TurnToFaceIEnumerator(_waypoints[i]));
 
         StartCoroutine(FollowPath());
     }
@@ -59,6 +59,19 @@ public class WaypointMovement : MonoBehaviour
         transform.eulerAngles = new(0, 0, targetAngle);
     }
 
+    private IEnumerator TurnToFaceIEnumerator (Vector3 lookTarget)
+    {
+        Vector3 directionToLookTarget = (lookTarget - transform.position).normalized;
+        float targetAngle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;        
+        float angle = transform.eulerAngles.z;
+
+        while (transform.eulerAngles.z != targetAngle)
+        {
+            angle = Mathf.LerpAngle(angle, targetAngle, turnSpeed * Time.deltaTime);
+            transform.eulerAngles = new(0, 0, angle);
+            yield return null;
+        }
+    }
 
     private int CalculateNextWaypointIndex (int current)
     {
