@@ -1,97 +1,59 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+using UnityEngine.Rendering.Universal;
 
 public class Guard : MonoBehaviour
 {
-    [SerializeField] private Transform pathHolder;
-    [SerializeField] private float speed = 5f;
-    [SerializeField] private float waitTime = .3f;
-    [SerializeField] private float turnSpeed = 90f;
-    [SerializeField] private bool reversed;
+    [SerializeField] private float timeToSpotPlayer = .5f;
+    [SerializeField] private float viewDistance;
+    [SerializeField] private Light2D light2D;
+    [SerializeField] private LayerMask detectionMask;
 
-    private int _index = -1;
-    private List<Vector2> _waypoints;
+    private float _playerVisibleTimer;
+    private float _viewAngle;
+    private Transform _player;
+    private const string PLAYER_TAG = "Player";
+
+    private void Awake ()
+    {
+        _player = GameObject.FindGameObjectWithTag(PLAYER_TAG).transform;
+    }
 
     private void Start ()
     {
-        _waypoints = new List<Vector2>();
+        _viewAngle = light2D.pointLightInnerAngle;
+    }
 
-        for (int i = 0; i < pathHolder.childCount; i++)
+    private void Update ()
+    {
+        if (CanSeePlayer())
         {
-            _waypoints.Add(pathHolder.GetChild(i).position);
+            light2D.color = Color.red;
         }
-
-        transform.position = _waypoints[0];
-
-        StartCoroutine(FollowPath());
-    }
-
-    private IEnumerator FollowPath ()
-    {
-        _index = reversed ? CalculatePreviousWaypointIndex(_index) : CalculateNextWaypointIndex(_index);
-
-        yield return GoToPoint(_waypoints[_index]);
-        yield return new WaitForSeconds(waitTime);
-
-        int nextIndex = _index;
-        nextIndex = CalculateNextWaypointIndex(nextIndex);
-        yield return TurnToFace(_waypoints[nextIndex]);
-
-        StartCoroutine(FollowPath());
-    }
-
-    private IEnumerator GoToPoint (Vector2 wayPoint)
-    {
-        while (Vector2.Distance(transform.position, wayPoint) > .1f)
+        else
         {
-            Vector2 dir = (wayPoint - (Vector2)transform.position).normalized;
-            transform.position += speed * Time.deltaTime * (Vector3)dir;
-            yield return null;
+            light2D.color = Color.green;
         }
     }
-    
-    private IEnumerator TurnToFace (Vector3 lookTarget)
+
+    private bool CanSeePlayer ()
     {
-        Vector3 directionToLookTarget = (lookTarget - transform.position).normalized;
-        float angle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;
-        float currentAngle = transform.eulerAngles.z;
-        float angleReachPercent = 0f;
+        if (Vector3.Distance(transform.position, _player.position) > viewDistance) return false;
 
-        while (Mathf.Abs(Mathf.DeltaAngle(currentAngle, angle)) > 0.05f)
-        {
-            angleReachPercent += Time.deltaTime;
-            currentAngle = Mathf.MoveTowardsAngle(currentAngle, angle, turnSpeed * Time.deltaTime);
-            transform.eulerAngles = new(0f, 0f, currentAngle);
-            yield return null;
-        }
-    }
-    
+        Vector3 dir = (_player.position - transform.position).normalized;
+        float angle = Vector3.Angle(transform.up, dir);
 
-    private int CalculateNextWaypointIndex (int current)
-    {
-        return (current + 1) % _waypoints.Count;
-    }
+        if (angle > _viewAngle / 2f) return false;
 
-    private int CalculatePreviousWaypointIndex (int current)
-    {
-        if (current == 0) return 0;
+        RaycastHit2D hit = Physics2D.Linecast(transform.position, _player.position, detectionMask);
+        if (!hit.collider.CompareTag(PLAYER_TAG)) return false;
 
-        return (current - 1) % _waypoints.Count;
+        return true;
     }
 
     private void OnDrawGizmos ()
     {
-        Vector3 startPosition = pathHolder.GetChild(0).position;
-        Vector3 previousPosition = startPosition;
-
-        foreach (Transform waypoint in pathHolder)
-        {
-            Gizmos.DrawSphere(waypoint.position, .3f);
-            Gizmos.DrawLine(previousPosition, waypoint.position);
-            previousPosition = waypoint.position;
-        }
-
-        Gizmos.DrawLine(previousPosition, startPosition);
+        Vector2 position = transform.position + transform.up * viewDistance;
+        Gizmos.color = Color.yellow;   
+        Gizmos.DrawLine(transform.position, position);
     }
 }
