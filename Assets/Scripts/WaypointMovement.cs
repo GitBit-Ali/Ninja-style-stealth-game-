@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class WaypointMovement : MonoBehaviour
@@ -34,9 +35,9 @@ public class WaypointMovement : MonoBehaviour
         yield return GoToPoint(_waypoints[_index]);
         yield return new WaitForSeconds(waitTime);
 
-        int nextIndex = _index;
-        nextIndex = CalculateNextWaypointIndex(nextIndex);
-        TurnToFace(_waypoints[nextIndex]);
+        int i = _index;
+        i = CalculateNextWaypointIndex(i);
+        TurnToFace(_waypoints[i]);
 
         StartCoroutine(FollowPath());
     }
@@ -54,8 +55,8 @@ public class WaypointMovement : MonoBehaviour
     private void TurnToFace (Vector3 lookTarget)
     {
         Vector3 directionToLookTarget = (lookTarget - transform.position).normalized;
-        float angle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;
-        transform.eulerAngles = new Vector3(0f, 0f, angle);
+        float targetAngle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;
+        transform.eulerAngles = new(0, 0, targetAngle);
     }
 
 

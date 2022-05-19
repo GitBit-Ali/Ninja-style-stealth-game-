@@ -1332,7 +1332,7 @@ GameObject:
   - component: {fileID: 782117817544219559}
   - component: {fileID: 782117817544219578}
   - component: {fileID: 782117817544219580}
-  - component: {fileID: 782117817544219579}
+  - component: {fileID: 782117817544219581}
   m_Layer: 3
   m_Name: Gaurd
   m_TagString: Untagged
@@ -1361,23 +1361,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &782117817544219579
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 782117817544219577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e34e5a7589acb2542811e7fa1ecbd05d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pathHolder: {fileID: 5477855188301729049}
-  speed: 0
-  waitTime: 0.3
-  turnSpeed: 90
-  rb: {fileID: 782117817544219578}
 --- !u!114 &782117817544219580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1396,6 +1379,23 @@ MonoBehaviour:
   detectionMask:
     serializedVersion: 2
     m_Bits: 55
+--- !u!114 &782117817544219581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782117817544219577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e34e5a7589acb2542811e7fa1ecbd05d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pathHolder: {fileID: 5477855188301729049}
+  speed: 2
+  waitTime: 0.3
+  turnSpeed: 90
+  rb: {fileID: 782117817544219578}
 --- !u!4 &782117817820533714
 Transform:
   m_ObjectHideFlags: 0
