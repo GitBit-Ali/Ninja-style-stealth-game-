@@ -1,11 +1,16 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using System;
 
 public class Guard : MonoBehaviour
 {
+    public static event Action OnPlayerSpotted;
+
     [SerializeField] private float timeToSpotPlayer = .5f;
     [SerializeField] private float viewDistance;
     [SerializeField] private Light2D light2D;
+    [SerializeField] private Color lightNormalColor = Color.green;
+    [SerializeField] private Color lightPlayerSpottedColor = Color.red;
     [SerializeField] private LayerMask detectionMask;
 
     private float _playerVisibleTimer;
@@ -21,17 +26,30 @@ public class Guard : MonoBehaviour
     private void Start ()
     {
         _viewAngle = light2D.pointLightInnerAngle;
+        OnPlayerSpotted += () =>
+        {
+            GetComponent<WaypointMovement>().SetSpeed(0);
+        };
+
+        GetComponent<WaypointMovement>().SetSpeed(3);
     }
 
     private void Update ()
     {
         if (CanSeePlayer())
         {
-            light2D.color = Color.red;
+            _playerVisibleTimer += Time.deltaTime;
         }
         else
         {
-            light2D.color = Color.green;
+            _playerVisibleTimer -= Time.deltaTime;
+        }
+        _playerVisibleTimer = Mathf.Clamp(_playerVisibleTimer, 0, timeToSpotPlayer);
+        light2D.color = Color.Lerp(lightNormalColor, lightPlayerSpottedColor, _playerVisibleTimer / timeToSpotPlayer);
+
+        if (_playerVisibleTimer >= timeToSpotPlayer)
+        {
+            OnPlayerSpotted?.Invoke();
         }
     }
 

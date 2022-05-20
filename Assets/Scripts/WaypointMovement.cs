@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class WaypointMovement : MonoBehaviour
@@ -13,8 +12,9 @@ public class WaypointMovement : MonoBehaviour
 
     private int _index = -1;
     private List<Vector2> _waypoints;
+    private bool isTurning;
 
-    private void Start ()
+    private void Awake ()
     {
         _waypoints = new List<Vector2>();
 
@@ -25,7 +25,7 @@ public class WaypointMovement : MonoBehaviour
 
         transform.position = _waypoints[0];
 
-        StartCoroutine(FollowPath());
+        StartCoroutine(nameof(FollowPath));
     }
 
     private IEnumerator FollowPath ()
@@ -37,7 +37,7 @@ public class WaypointMovement : MonoBehaviour
 
         int i = _index;
         i = CalculateNextWaypointIndex(i);
-        StartCoroutine(TurnToFaceIEnumerator(_waypoints[i]));
+        yield return TurnToFaceIEnumerator(_waypoints[i]);
 
         StartCoroutine(FollowPath());
     }
@@ -52,25 +52,22 @@ public class WaypointMovement : MonoBehaviour
         }
     }
 
-    private void TurnToFace (Vector3 lookTarget)
-    {
-        Vector3 directionToLookTarget = (lookTarget - transform.position).normalized;
-        float targetAngle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;
-        transform.eulerAngles = new(0, 0, targetAngle);
-    }
-
     private IEnumerator TurnToFaceIEnumerator (Vector3 lookTarget)
     {
+        isTurning = true;
+
         Vector3 directionToLookTarget = (lookTarget - transform.position).normalized;
         float targetAngle = (Mathf.Atan2(directionToLookTarget.y, directionToLookTarget.x) * Mathf.Rad2Deg) - 90;        
         float angle = transform.eulerAngles.z;
 
-        while (transform.eulerAngles.z != targetAngle)
+        while (Mathf.Abs(Mathf.DeltaAngle(transform.eulerAngles.z, targetAngle)) > 0.05f)
         {
             angle = Mathf.LerpAngle(angle, targetAngle, turnSpeed * Time.deltaTime);
             transform.eulerAngles = new(0, 0, angle);
             yield return null;
         }
+
+        isTurning = false;
     }
 
     private int CalculateNextWaypointIndex (int current)
@@ -91,5 +88,10 @@ public class WaypointMovement : MonoBehaviour
         }
 
         Gizmos.DrawLine(previousPosition, startPosition);
+    }
+
+    public void SetSpeed (float newSpeed)
+    {
+        speed = newSpeed;
     }
 }
