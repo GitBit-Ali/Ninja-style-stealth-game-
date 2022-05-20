@@ -16,6 +16,16 @@ public class PlayerMovement : MonoBehaviour
         Guard.OnPlayerSpotted += Guard_OnPlayerSpotted;
     }
 
+    private void Start ()
+    {
+        Player.OnEndOfLevelReached += Instance_OnEndOfLevelReached;
+    }
+
+    private void Instance_OnEndOfLevelReached ()
+    {
+        disabled = true;
+    }
+
     private void Guard_OnPlayerSpotted ()
     {
         disabled = true;
@@ -39,5 +49,6 @@ public class PlayerMovement : MonoBehaviour
     private void OnDestroy ()
     {
         Guard.OnPlayerSpotted -= Guard_OnPlayerSpotted;
+        Player.OnEndOfLevelReached -= Instance_OnEndOfLevelReached;
     }
 }

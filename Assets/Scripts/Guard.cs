@@ -26,12 +26,16 @@ public class Guard : MonoBehaviour
     private void Start ()
     {
         _viewAngle = light2D.pointLightInnerAngle;
-        OnPlayerSpotted += () =>
-        {
-            GetComponent<WaypointMovement>().SetSpeed(0);
-        };
+
+        OnPlayerSpotted += DisableMovement;
+        Player.OnEndOfLevelReached += DisableMovement;
 
         GetComponent<WaypointMovement>().SetSpeed(3);
+    }
+
+    private void DisableMovement ()
+    {
+        GetComponent<WaypointMovement>().SetSpeed(0);
     }
 
     private void Update ()
@@ -73,5 +77,11 @@ public class Guard : MonoBehaviour
         Vector2 position = transform.position + transform.up * viewDistance;
         Gizmos.color = Color.yellow;   
         Gizmos.DrawLine(transform.position, position);
+    }
+
+    private void OnDestroy ()
+    {
+        OnPlayerSpotted -= DisableMovement;
+        Player.OnEndOfLevelReached -= DisableMovement;
     }
 }

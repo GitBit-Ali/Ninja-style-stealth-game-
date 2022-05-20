@@ -6,14 +6,8 @@ public class Singleton<T> : MonoBehaviour where T : class
 
     private void Awake ()
     {
-        T thisT = this as T;
-        if (instance == null)
-        {
-            instance = thisT;
-        }
-        else if (instance != thisT && instance != null)
-        {
-            Destroy(gameObject);
-        }
+        if (instance != null) return;
+        
+        instance = this as T;
     }
 }
